@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TaskFlow Pro</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:linear-gradient(135deg,#6366f1,#3b82f6);
+    color:white;
+}
+
+/* HEADER */
+.header{
+    padding:20px;
+    text-align:center;
+}
+
+/* MAIN CONTAINER */
+.main{
+    background:white;
+    color:black;
+    border-radius:25px 25px 0 0;
+    padding:20px;
+}
+
+/* TOP GRID */
+.top{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+}
+
+/* CARD */
+.card{
+    background:#f1f5f9;
+    padding:15px;
+    border-radius:15px;
+}
+
+/* TASK GRID */
+.tasks{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:15px;
+    margin-top:20px;
+}
+
+/* TASK */
+.task{
+    padding:15px;
+    border-radius:15px;
+    background:#e2e8f0;
+}
+
+.work{background:#dbeafe;}
+.study{background:#dcfce7;}
+.personal{background:#fef3c7;}
+
+.done{
+    text-decoration:line-through;
+    opacity:0.6;
+}
+
+.overdue{
+    border:2px solid red;
+}
+
+/* INPUT BAR */
+.inputBar{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:white;
+    padding:10px;
+    display:flex;
+    gap:10px;
+}
+
+input, select{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #ddd;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:10px;
+    background:#6366f1;
+    color:white;
+    cursor:pointer;
+}
+
+/* SUGGESTIONS */
+.suggestions span{
+    display:inline-block;
+    background:#e0e7ff;
+    padding:5px 10px;
+    border-radius:10px;
+    margin:5px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>✨ TaskFlow Pro</h1>
+    <p>Organize smarter, not harder</p>
+</div>
+
+<div class="main">
+
+<!-- TOP SECTION -->
+<div class="top">
+
+<!-- FOCUS -->
+<div class="card">
+    <h3>🎯 Focus</h3>
+    <p>Finish 3 tasks today</p>
+    <button onclick="startFocus()">Start</button>
+</div>
+
+<!-- SUGGESTIONS -->
+<div class="card suggestions">
+    <h3>🧠 Suggestions</h3>
+    <span onclick="quickAdd('Study 30 mins')">📚 Study</span>
+    <span onclick="quickAdd('Drink water')">💧 Water</span>
+    <span onclick="quickAdd('Call someone')">📞 Call</span>
+</div>
+
+<!-- STATS -->
+<div class="card">
+    <h3>📊 Stats</h3>
+    <p>Total: <span id="total">0</span></p>
+    <p>Done: <span id="done">0</span></p>
+</div>
+
+</div>
+
+<!-- TASKS -->
+<div class="tasks" id="taskList"></div>
+
+</div>
+
+<!-- INPUT BAR -->
+<div class="inputBar">
+    <input id="taskInput" placeholder="New task...">
+    <input type="date" id="date">
+    <input type="time" id="time">
+
+    <select id="category">
+        <option value="work">💼</option>
+        <option value="study">📚</option>
+        <option value="personal">🧘</option>
+    </select>
+
+    <button onclick="addTask()">Add</button>
+</div>
+
+<script>
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let focusIndex = 0;
+
+/* ADD */
+function addTask(){
+    let text = taskInput.value;
+    if(!text) return;
+
+    tasks.push({
+        text,
+        done:false,
+        category:category.value,
+        date:date.value,
+        time:time.value
+    });
+
+    taskInput.value="";
+    save(); render();
+}
+
+/* QUICK ADD */
+function quickAdd(text){
+    tasks.push({text,done:false,category:"personal"});
+    save(); render();
+}
+
+/* TOGGLE */
+function toggle(i){
+    tasks[i].done = !tasks[i].done;
+    save(); render();
+}
+
+/* DELETE */
+function del(i){
+    tasks.splice(i,1);
+    save(); render();
+}
+
+/* SAVE */
+function save(){
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+/* FOCUS */
+function startFocus(){
+    focusIndex = 0;
+    let all = document.querySelectorAll(".task");
+    all.forEach(t=>t.style.display="none");
+
+    if(all[0]) all[0].style.display="block";
+}
+
+/* RENDER */
+function render(){
+    let list = document.getElementById("taskList");
+    list.innerHTML="";
+
+    let doneCount=0;
+
+    tasks.forEach((t,i)=>{
+        if(t.done) doneCount++;
+
+        list.innerHTML+=`
+        <div class="task ${t.category} ${t.done?'done':''}">
+            <input type="checkbox" ${t.done?"checked":""} onchange="toggle(${i})">
+            ${t.text}
+            <br>
+            <small>${t.date||""} ${t.time||""}</small>
+            <br>
+            <button onclick="del(${i})">Delete</button>
+        </div>`;
+    });
+
+    document.getElementById("total").innerText = tasks.length;
+    document.getElementById("done").innerText = doneCount;
+}
+
+render();
+
+</script>
+
+</body>
+</html>
